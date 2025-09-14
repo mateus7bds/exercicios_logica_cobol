@@ -6,6 +6,9 @@
            DECIMAL-POINT IS COMMA.
        DATA DIVISION.
        WORKING-STORAGE SECTION.
+      * Nao existe como acessar a tabela ASCII no COBOL (não que eu
+      * conheça, por isso montei uma variavel com os caracteres e sua
+      * posicao correspondente a esta codificação.
        01 CARACTERES.
       *    01
            03 FILLER PIC X(01) VALUE SPACE.
@@ -200,6 +203,8 @@
       ******************************************************************
       * TABELA ASCII, MAS QUE COMEÇA COM 32 (= 1) ATÉ 127 (=95)
       ******************************************************************
+      * Criei uma tabela para que fosse possível acessar esses
+      * caracteres de acordo com a posicao.
        01 FILLER REDEFINES CARACTERES.
            03 TABELA-ASCII PIC X(01) OCCURS 95 TIMES
                INDEXED BY IC-TABELA.
@@ -214,8 +219,13 @@
        77 POSICAO-FINAL PIC 9(02).
        77 RESTO PIC 9(02).
        PROCEDURE DIVISION.
+      * Obtendo e tratando a entrada
            ACCEPT ENTRADA FROM CONSOLE
+           MOVE FUNCTION TRIM(ENTRADA) TO ENTRADA
+      * Obtendo o tamaho da string de entrada
            MOVE LENGTH OF ENTRADA TO TAMANHO-ENTRADA
+      * Percorre a string de forma inversa procurando o primeiro
+      * caracter que nao seja um espaco. Este sera o tamanho da string.
            PERFORM VARYING INDICE FROM TAMANHO-ENTRADA BY -1 UNTIL
            INDICE < 1
                MOVE ENTRADA(INDICE:1) TO CARACTER-ENTRADA
@@ -224,15 +234,21 @@
                    EXIT PERFORM
                END-IF
            END-PERFORM
-
+      * Primeira passada: Desloca os caracteres 3 posicoes para a
+      * direita, se forem letras (maiusculas ou minusculas)
            PERFORM VARYING INDICE FROM 1 BY 1 UNTIL
            INDICE > TAMANHO-ENTRADA
+      * Extracao do caracter da string de entrada
                MOVE ENTRADA(INDICE:1) TO CARACTER-ENTRADA
                SET IC-TABELA TO 0
+      * Varre a tabela correspondente a tabela ASCII para obter a
+      * posicao
                SEARCH TABELA-ASCII VARYING IC-TABELA
                    WHEN CARACTER-ENTRADA EQUAL TABELA-ASCII(IC-TABELA)
                        MOVE IC-TABELA TO POSICAO
                END-SEARCH
+      * Se forem letras (maiuculas ou minusculas), desloca 3 posicoes
+      * para a direita. Se nao, passa para a proxima iteracao
                EVALUATE POSICAO
                    WHEN 34 THRU 59
                    WHEN 66 THRU 91
@@ -243,32 +259,42 @@
                        CONTINUE
                END-EVALUATE
            END-PERFORM
-
+      * Segunda passada: inverter a string
            MOVE FUNCTION TRIM(FUNCTION REVERSE(ENTRADA)) TO ENTRADA
-
+      * Obtem o resto da divisao por dois para descobrir se o tamaho
+      * da string eh par ou nao
            MOVE FUNCTION MOD(POSICAO-FINAL 2) TO RESTO
-
+      * Se for par, define a posicao inicial da metade da string
            IF RESTO EQUAL 0
                DIVIDE POSICAO-FINAL BY 2 GIVING POSICAO-INICIAL
            ELSE
+      * Se nao for par, obtem a metade (float truncada) e adiciona mais
+      * um para a posicao inicial da metade
                DIVIDE POSICAO-FINAL BY 2 GIVING POSICAO-FLOAT
                MOVE FUNCTION INTEGER(POSICAO-FLOAT + 1)
                TO POSICAO-INICIAL
            END-IF
-
+      * Terceira passada: todo caracter tem que deslocado uma posicao
+      * para a esquerda
+      * Loop comeca na metade da string (POSICAO-INICIAL)
            PERFORM VARYING INDICE FROM POSICAO-INICIAL BY 1 UNTIL
            INDICE > TAMANHO-ENTRADA
+      * Extrai o caracter
                MOVE ENTRADA(INDICE:1) TO CARACTER-ENTRADA
+      * Procura a posicao do caracter na "tabela ASCII"
                SET IC-TABELA TO 0
                SEARCH TABELA-ASCII VARYING IC-TABELA
                    WHEN CARACTER-ENTRADA EQUAL TABELA-ASCII(IC-TABELA)
                        MOVE IC-TABELA TO POSICAO
                END-SEARCH
+      * Subtrai a posicao do caracter por um
                SUBTRACT 1 FROM POSICAO
+      * Se nao for espaco, desloca para a esquerda
                IF CARACTER-ENTRADA NOT EQUAL SPACE
                    MOVE TABELA-ASCII(POSICAO) TO ENTRADA(INDICE:1)
                END-IF
            END-PERFORM
+      * Mostra a saida no final
            DISPLAY ENTRADA
            GOBACK
            .

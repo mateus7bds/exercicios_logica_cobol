@@ -3,10 +3,10 @@
 
 # Roteiro para criar script de teste no T-Rexx
 
-Colocar código de retorno maior ou igual a 0 (pega todos os retornos como válidos) -> para ver a cobertura \n
-Executar passo a passo ou linha por linha \n
-Se travar em um ponto, busco uma forma de continuar para onde quero chegar no código \n
-Tenhamos um programa ou que chama outro programa que faz acesso a várias tabelas. Alternativas: \n
+Colocar código de retorno maior ou igual a 0 (pega todos os retornos como válidos). -> para ver a cobertura <br>
+Executar passo a passo ou linha por linha <br>
+Se travar em um ponto, busco uma forma de continuar para onde quero chegar no código <br>
+Tenhamos um programa ou que chama outro programa que faz acesso a várias tabelas. Alternativas: <br>
 * Falar com o pessoal do Time de Apoio
  * Pegar o script de teste de outros testes
   * Visualizar as tabelas e suas ligações
